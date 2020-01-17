@@ -7,11 +7,16 @@
 
 package frc.robot;
 
+import frc.robot.commands.DriveAlignWithTarget;
 import frc.robot.commands.DriveJoystick;
+import frc.robot.commands.IntakeArmDown;
+import frc.robot.commands.IntakeArmUp;
+import frc.robot.commands.IntakeWheelsSpin;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.IntakeArmSubsystem;
+import frc.robot.subsystems.IntakeWheelsSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.button.Button;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
@@ -23,8 +28,10 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DriveSubsystem driveSubsystem = new DriveSubsystem();
+  private final IntakeArmSubsystem intakeArmSubsystem = new IntakeArmSubsystem();
+  private final IntakeWheelsSubsystem intakeWheelsSubsystem = new IntakeWheelsSubsystem();
 
-  private final DriveJoystick driveJoystick = new DriveJoystick(driveSubsystem);
+  private final Command autoCommand = new DriveJoystick(driveSubsystem);
 
 
 
@@ -32,6 +39,7 @@ public class RobotContainer {
    * The container for the robot.  Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -43,8 +51,29 @@ public class RobotContainer {
    * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    Button shootButton = new JoystickButton(RobotIO.driveStick, Settings.SHOOT_BUTTON);
-    shootButton.whileHeld(new WaitCommand(1)); //WaitCommand is a placeholder
+
+    //-----Driver commands-----
+    //Reverse Button
+    new JoystickButton(RobotIO.driveStick, Settings.DRIVE_REVERSE_BUTTON)
+    .whenPressed(() -> driveSubsystem.setInReverse(!driveSubsystem.getInReverse()));
+
+    //Align with target button
+    new JoystickButton(RobotIO.driveStick, Settings.DRIVE_ALIGN_TARGET_BUTTON)
+    .whileHeld(new DriveAlignWithTarget(driveSubsystem))
+    .whenReleased(new DriveJoystick(driveSubsystem));
+
+
+    //-----Operator commands-----
+    //Shoot Button
+    new JoystickButton(RobotIO.operatorStick, Settings.SHOOT_BUTTON)
+    .whileHeld(new WaitCommand(1)); //WaitCommand is a placeholder
+
+    //Pickup Button
+    new JoystickButton(RobotIO.operatorStick, Settings.SHOOT_BUTTON)
+    .whenPressed(new IntakeArmDown(intakeArmSubsystem))
+    .whileHeld(new IntakeWheelsSpin(intakeWheelsSubsystem, Settings.INTAKE_WHEEL_SPEED))
+    .whenReleased(new IntakeArmUp(intakeArmSubsystem))
+    .whenReleased(new IntakeWheelsSpin(intakeWheelsSubsystem, 0.0));
   }
 
 
@@ -54,7 +83,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // A driveJoystick will run in autonomous
-    return driveJoystick;
+    // The command that will run in autonomous
+    return autoCommand;
   }
 }

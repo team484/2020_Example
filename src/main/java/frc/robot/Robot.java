@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -18,9 +20,15 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * project.
  */
 public class Robot extends TimedRobot {
+
+  public Robot() {
+    super(0.01);
+  }
   private Command m_autonomousCommand;
 
   private RobotContainer m_robotContainer;
+  AddressableLED leds = new AddressableLED(0);
+  AddressableLEDBuffer ledBuff = new AddressableLEDBuffer(144);
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -31,8 +39,14 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+    leds.setLength(144);
+
+    leds.setData(ledBuff);
+    leds.start();
   }
 
+  int i = 1;
+ 
   /**
    * This function is called every robot packet, no matter the mode. Use this for items like
    * diagnostics that you want ran during disabled, autonomous, teleoperated and test.
@@ -47,6 +61,10 @@ public class Robot extends TimedRobot {
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+    ledBuff.setHSV(i%144, i%180, 255, 100);
+    ledBuff.setHSV((i-1)%144, 0, 0, 0);
+    i++;
+    leds.setData(ledBuff);
   }
 
   /**
